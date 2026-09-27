@@ -401,32 +401,6 @@
                         <!-- Los resultados se cargarán aquí -->
                     </div>
 
-                    <!-- Bulk Excel Upload -->
-                    <div class="bulk-upload-panel mt-4">
-                        <h6 class="bulk-upload-title">
-                            <i class="fas fa-file-excel"></i> Carga masiva con Excel
-                        </h6>
-                        <div class="excel-dropzone">
-                            <input type="file" id="archivoExcelProductos" class="excel-file-input" accept=".xlsx">
-                            <label for="archivoExcelProductos" class="btn btn-outline-primary btn-sm excel-file-button">
-                                <i class="fas fa-upload"></i> Seleccionar archivo .xlsx
-                            </label>
-                            <span id="nombreArchivoExcel" class="excel-file-name">Ningún archivo seleccionado</span>
-                        </div>
-                        <div class="excel-columns" aria-label="Columnas requeridas">
-                            <span class="excel-column-pill">Codigo</span>
-                            <span class="excel-column-pill">Nombre</span>
-                            <span class="excel-column-pill">Descripcion</span>
-                            <span class="excel-column-pill">PrecioIngreso</span>
-                            <span class="excel-column-pill">PrecioVenta</span>
-                            <span class="excel-column-pill">Cantidad</span>
-                        </div>
-                        <button class="btn btn-info btn-block" type="button" onclick="cargarExcelProductos()">
-                            <i class="fas fa-file-import"></i> Cargar productos
-                        </button>
-                        <div id="resultadoCargaExcel" class="mt-3"></div>
-                    </div>
-
                     <!-- Create New Product -->
                     <div class="mt-3">
                         <button class="btn btn-success btn-block" onclick="mostrarFormularioNuevo()">
@@ -481,6 +455,32 @@
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Bulk Excel Upload -->
+                    <div class="bulk-upload-panel mt-4">
+                        <h6 class="bulk-upload-title">
+                            <i class="fas fa-file-excel"></i> Carga masiva con Excel
+                        </h6>
+                        <div class="excel-dropzone">
+                            <input type="file" id="archivoExcelProductos" class="excel-file-input" accept=".xlsx">
+                            <label for="archivoExcelProductos" class="btn btn-outline-primary btn-sm excel-file-button">
+                                <i class="fas fa-upload"></i> Seleccionar archivo .xlsx
+                            </label>
+                            <span id="nombreArchivoExcel" class="excel-file-name">Ningún archivo seleccionado</span>
+                        </div>
+                        <div class="excel-columns" aria-label="Columnas requeridas">
+                            <span class="excel-column-pill">Codigo</span>
+                            <span class="excel-column-pill">Nombre</span>
+                            <span class="excel-column-pill">Descripcion</span>
+                            <span class="excel-column-pill">PrecioIngreso</span>
+                            <span class="excel-column-pill">PrecioVenta</span>
+                            <span class="excel-column-pill">Cantidad</span>
+                        </div>
+                        <button class="btn btn-info btn-block" type="button" onclick="cargarExcelProductos()">
+                            <i class="fas fa-file-import"></i> Cargar productos
+                        </button>
+                        <div id="resultadoCargaExcel" class="mt-3"></div>
                     </div>
                 </div>
             </div>

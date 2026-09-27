@@ -11,9 +11,9 @@ namespace ControlInventario.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public HomeController(ILogger<HomeController> logger, ControlFarmaclinicContext context)
+        public HomeController(ILogger<HomeController> logger, ControlInventarioContext context)
         {
             _logger = logger;
             _context = context;

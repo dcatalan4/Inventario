@@ -16,10 +16,10 @@ namespace ControlInventario.Controllers
     [Authorize]
     public class VentaController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
         private readonly IMovimientoCajaService _movimientoCajaService;
 
-        public VentaController(ControlFarmaclinicContext context, IMovimientoCajaService movimientoCajaService)
+        public VentaController(ControlInventarioContext context, IMovimientoCajaService movimientoCajaService)
         {
             _context = context;
             _movimientoCajaService = movimientoCajaService;

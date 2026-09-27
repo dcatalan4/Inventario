@@ -55,9 +55,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Configurar DbContext con PostgreSQL
-builder.Services.AddDbContext<ControlFarmaclinicContext>(options =>
+builder.Services.AddDbContext<ControlInventarioContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ControlFarmaclinicContext"), npgsqlOptions =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ControlInventarioContext"), npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(30), errorCodesToAdd: null);
     });

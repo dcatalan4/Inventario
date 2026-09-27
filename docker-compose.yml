@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  farmaclinic:
+  control-inventario:
     build: .
     ports:
       - "8080:8080"
@@ -11,24 +11,24 @@ services:
     depends_on:
       - postgres
     networks:
-      - farmaclinic-network
+      - control-inventario-network
 
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: farmaclinic
-      POSTGRES_USER: farmaclinic_user
-      POSTGRES_PASSWORD: farmaclinic_password
+      POSTGRES_DB: control_inventario
+      POSTGRES_USER: control_inventario_user
+      POSTGRES_PASSWORD: control_inventario_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - farmaclinic-network
+      - control-inventario-network
 
 volumes:
   postgres_data:
 
 networks:
-  farmaclinic-network:
+  control-inventario-network:
     driver: bridge

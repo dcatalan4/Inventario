@@ -10,9 +10,9 @@ namespace ControlInventario.Controllers
     [Authorize]
     public class ProductoController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public ProductoController(ControlFarmaclinicContext context)
+        public ProductoController(ControlInventarioContext context)
         {
             _context = context;
         }

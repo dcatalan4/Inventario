@@ -11,9 +11,9 @@ namespace ControlInventario.Controllers
     [Authorize]
     public class CajaController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public CajaController(ControlFarmaclinicContext context)
+        public CajaController(ControlInventarioContext context)
         {
             _context = context;
         }

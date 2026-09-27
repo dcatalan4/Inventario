@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ControlInventario.Models
 {
-    public partial class ControlFarmaclinicContext : DbContext
+    public partial class ControlInventarioContext : DbContext
     {
-        public ControlFarmaclinicContext(DbContextOptions<ControlFarmaclinicContext> options)
+        public ControlInventarioContext(DbContextOptions<ControlInventarioContext> options)
             : base(options)
         {
         }

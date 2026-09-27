@@ -14,11 +14,11 @@ namespace ControlInventario.Controllers
     [Authorize(Roles = "Admin")]
     public class ReportesController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
         private readonly ISaldoCajaService _saldoCajaService;
         private readonly IMovimientoCajaService _movimientoCajaService;
 
-        public ReportesController(ControlFarmaclinicContext context, ISaldoCajaService saldoCajaService, 
+        public ReportesController(ControlInventarioContext context, ISaldoCajaService saldoCajaService, 
             IMovimientoCajaService movimientoCajaService)
         {
             _context = context;

@@ -16,9 +16,9 @@ namespace ControlInventario.Services
 
     public class SaldoCajaService : ISaldoCajaService
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public SaldoCajaService(ControlFarmaclinicContext context)
+        public SaldoCajaService(ControlInventarioContext context)
         {
             _context = context;
         }

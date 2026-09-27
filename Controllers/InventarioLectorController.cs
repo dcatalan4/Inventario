@@ -10,9 +10,9 @@ namespace ControlInventario.Controllers
     [Authorize(Policy = "LectorPolicy")]
     public class InventarioLectorController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public InventarioLectorController(ControlFarmaclinicContext context)
+        public InventarioLectorController(ControlInventarioContext context)
         {
             _context = context;
         }

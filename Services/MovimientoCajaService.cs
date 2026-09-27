@@ -13,9 +13,9 @@ namespace ControlInventario.Services
 
     public class MovimientoCajaService : IMovimientoCajaService
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public MovimientoCajaService(ControlFarmaclinicContext context)
+        public MovimientoCajaService(ControlInventarioContext context)
         {
             _context = context;
         }

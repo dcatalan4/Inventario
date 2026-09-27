@@ -20,7 +20,7 @@
   },
   "AllowedHosts": "*",
   "ConnectionStrings": {
-    "ControlFarmaclinicContext": "Host=your-postgres-host;Port=5432;Database=farmaclinic;Username=farmaclinic_user;Password=farmaclinic_password;SSL Mode=Require;Trust Server Certificate=true"
+    "ControlInventarioContext": "Host=your-postgres-host;Port=5432;Database=control_inventario;Username=control_inventario_user;Password=control_inventario_password;SSL Mode=Require;Trust Server Certificate=true"
   }
 }
 ```
@@ -41,9 +41,9 @@ git push origin main
 1. **Crear PostgreSQL Service:**
    - Ve a Render Dashboard
    - Click "New +" → "PostgreSQL"
-   - Nombre: `farmaclinic-db`
-   - Database Name: `farmaclinic`
-   - User: `farmaclinic_user`
+   - Nombre: `control-inventario-db`
+   - Database Name: `control_inventario`
+   - User: `control_inventario_user`
    - Password: (generado automáticamente)
    - Region: elige la más cercana a tus usuarios
 
@@ -64,7 +64,7 @@ git push origin main
    ```bash
    ASPNETCORE_ENVIRONMENT=Production
    ASPNETCORE_URLS=http://+:8080
-   ConnectionStrings__ControlFarmaclinicContext=postgresql://user:password@host:port/database
+   ConnectionStrings__ControlInventarioContext=postgresql://user:password@host:port/database
    ```
 
 3. **Configurar Health Check:**
@@ -83,7 +83,7 @@ using Microsoft.EntityFrameworkCore;
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ControlFarmaclinicContext>();
+    var context = services.GetRequiredService<ControlInventarioContext>();
     context.Database.Migrate();
 }
 ```
@@ -107,7 +107,7 @@ ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=http://+:8080
 
 # Base de datos (reemplaza con tus datos)
-ConnectionStrings__ControlFarmaclinicContext=Host=host;Port=5432;Database=database;Username=user;Password=password;SSL Mode=Require;Trust Server Certificate=true
+ConnectionStrings__ControlInventarioContext=Host=host;Port=5432;Database=database;Username=user;Password=password;SSL Mode=Require;Trust Server Certificate=true
 
 # Seguridad (opcional)
 ASPNETCORE_FORWARDEDHEADERS_ENABLED=true

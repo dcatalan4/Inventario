@@ -10,9 +10,9 @@ namespace ControlInventario.Controllers
     [AllowAnonymous]
     public class EstadisticasController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public EstadisticasController(ControlFarmaclinicContext context)
+        public EstadisticasController(ControlInventarioContext context)
         {
             _context = context;
         }

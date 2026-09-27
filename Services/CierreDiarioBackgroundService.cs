@@ -62,7 +62,7 @@ namespace ControlInventario.Services
         private async Task EjecutarCierreDiario()
         {
             using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ControlFarmaclinicContext>();
+            var context = scope.ServiceProvider.GetRequiredService<ControlInventarioContext>();
 
             var hoy = DateTime.Today;
             var diaAnterior = hoy.AddDays(-1);
@@ -132,7 +132,7 @@ namespace ControlInventario.Services
             _logger.LogInformation($"Proceso de cierre diario completado para {cajasActivas.Count} cajas");
         }
 
-        private async Task ProcesarCajaIndividual(ControlFarmaclinicContext context, dynamic caja, DateTime diaAnterior, 
+        private async Task ProcesarCajaIndividual(ControlInventarioContext context, dynamic caja, DateTime diaAnterior, 
             Dictionary<int, SaldoCajaDiario> saldosExistentes, Dictionary<int, object> movimientosAgrupados, int idUsuarioCierre)
         {
             // Verificar si ya está cerrado
@@ -174,7 +174,7 @@ namespace ControlInventario.Services
             }
         }
 
-        private async Task<decimal> ObtenerSaldoInicial(ControlFarmaclinicContext context, int idCaja, DateTime fecha, decimal saldoActual)
+        private async Task<decimal> ObtenerSaldoInicial(ControlInventarioContext context, int idCaja, DateTime fecha, decimal saldoActual)
         {
             var diaAnterior = fecha.AddDays(-1);
             var saldoAnterior = await context.SaldoCajaDiarios
@@ -185,7 +185,7 @@ namespace ControlInventario.Services
             return saldoAnterior > 0 ? saldoAnterior : saldoActual;
         }
 
-        private async Task GuardarSaldoDiario(ControlFarmaclinicContext context, int idCaja, DateTime fecha, 
+        private async Task GuardarSaldoDiario(ControlInventarioContext context, int idCaja, DateTime fecha, 
             decimal saldoInicial, decimal saldoFinal, decimal totalIngresos, decimal totalEgresos, int idUsuario, bool cerrado)
         {
             var saldoDiario = await context.SaldoCajaDiarios
@@ -221,7 +221,7 @@ namespace ControlInventario.Services
             await context.SaveChangesAsync();
         }
 
-        private async Task ActualizarSaldoCaja(ControlFarmaclinicContext context, int idCaja, decimal nuevoSaldo)
+        private async Task ActualizarSaldoCaja(ControlInventarioContext context, int idCaja, decimal nuevoSaldo)
         {
             await context.Cajas
                 .Where(c => c.IdCaja == idCaja)

@@ -1,5 +1,5 @@
 /* =========================================================
-   FarmaClinic / ControlInventario - PostgreSQL schema
+   Control Inventario - PostgreSQL schema
    Ejecutar en una base de datos PostgreSQL vacia o recreable.
    Este script borra y recrea las tablas.
 ========================================================= */

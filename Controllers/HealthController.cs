@@ -22,14 +22,14 @@ namespace ControlInventario.Controllers
                 status = "healthy",
                 timestamp = DateTime.UtcNow,
                 version = "1.0.0",
-                service = "FarmaClinic API"
+                service = "Control Inventario API"
             });
         }
 
         [HttpGet("db-config")]
         public IActionResult GetDatabaseConfig()
         {
-            var connectionString = _configuration.GetConnectionString("ControlFarmaclinicContext");
+            var connectionString = _configuration.GetConnectionString("ControlInventarioContext");
             if (string.IsNullOrWhiteSpace(connectionString))
                 return Ok(new { configured = false });
 

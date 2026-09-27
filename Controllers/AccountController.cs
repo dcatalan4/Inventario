@@ -10,9 +10,9 @@ namespace ControlInventario.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ControlFarmaclinicContext _context;
+        private readonly ControlInventarioContext _context;
 
-        public AccountController(ControlFarmaclinicContext context)
+        public AccountController(ControlInventarioContext context)
         {
             _context = context;
         }

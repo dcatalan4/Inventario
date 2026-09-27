@@ -5,6 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Control Inventario</title>
+    <link rel="icon" type="image/svg+xml" href="~/icono-inventario.svg" asp-append-version="true" />
+    <link rel="alternate icon" href="~/favicon.ico" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -14,7 +16,10 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Control Inventario</a>
+                <a class="navbar-brand app-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-brand-icon" aria-hidden="true"></span>
+                    <span>Control Inventario</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>

@@ -20,3 +20,19 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.app-brand {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.app-brand-icon {
+  background-color: currentColor;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 1.6rem;
+  mask: url("../icono-inventario.svg") center / contain no-repeat;
+  -webkit-mask: url("../icono-inventario.svg") center / contain no-repeat;
+  width: 1.6rem;
+}

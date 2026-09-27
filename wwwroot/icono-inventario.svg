@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="Inventario" role="img">
+  <path d="M32 7 53 18.5v27L32 57 11 45.5v-27L32 7Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M11.5 19 32 30.5 52.5 19M32 30.5V56" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m22 12.5 20.5 11.7v9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

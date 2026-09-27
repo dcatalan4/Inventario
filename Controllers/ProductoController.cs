@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ControlInventario.Models;
 using ControlInventario.Helpers;
+using System.Globalization;
+using System.IO.Compression;
+using System.Text;
+using System.Xml.Linq;
 
 namespace ControlInventario.Controllers
 {
@@ -585,6 +589,274 @@ namespace ControlInventario.Controllers
             }
         }
 
+        // POST: Producto/CargarExcelProductos
+        [HttpPost]
+        public async Task<IActionResult> CargarExcelProductos(IFormFile archivo)
+        {
+            if (archivo == null || archivo.Length == 0)
+            {
+                return Json(new { success = false, message = "Seleccione un archivo Excel para cargar." });
+            }
+
+            var extension = Path.GetExtension(archivo.FileName);
+            if (!string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new { success = false, message = "El archivo debe ser Excel .xlsx." });
+            }
+
+            try
+            {
+                using var stream = archivo.OpenReadStream();
+                var resultado = LeerProductosDesdeExcel(stream);
+
+                if (!resultado.Productos.Any())
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "No se encontraron productos válidos en el archivo.",
+                        errores = resultado.Errores
+                    });
+                }
+
+                var codigos = resultado.Productos
+                    .Select(p => p.Codigo.Trim())
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var productosExistentes = await _context.Productos
+                    .Where(p => codigos.Contains(p.Codigo))
+                    .ToDictionaryAsync(p => p.Codigo, StringComparer.OrdinalIgnoreCase);
+
+                var productos = resultado.Productos.Select(producto =>
+                {
+                    var stockActual = 0;
+                    if (productosExistentes.TryGetValue(producto.Codigo, out var existente))
+                    {
+                        producto.IdProducto = existente.IdProducto;
+                        producto.Nombre = existente.Nombre;
+                        producto.Descripcion = existente.Descripcion;
+                        stockActual = existente.StockActual;
+                    }
+
+                    return new
+                    {
+                        idProducto = producto.IdProducto,
+                        codigo = producto.Codigo,
+                        nombre = producto.Nombre,
+                        descripcion = producto.Descripcion,
+                        precioIngreso = producto.PrecioIngreso,
+                        precioVenta = producto.PrecioVenta,
+                        cantidad = producto.Cantidad,
+                        stockActual
+                    };
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    productos,
+                    errores = resultado.Errores,
+                    message = $"Se cargaron {productos.Count} productos desde Excel."
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al cargar Excel: {ex.Message}");
+                return Json(new { success = false, message = "Error al leer el archivo Excel: " + ex.Message });
+            }
+        }
+
+        private static ResultadoCargaExcel LeerProductosDesdeExcel(Stream stream)
+        {
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+            var sharedStrings = LeerSharedStrings(archive);
+            var worksheet = archive.GetEntry("xl/worksheets/sheet1.xml")
+                ?? throw new InvalidOperationException("No se encontró la primera hoja del archivo Excel.");
+
+            using var worksheetStream = worksheet.Open();
+            var document = XDocument.Load(worksheetStream);
+            XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+            var rows = document.Descendants(ns + "row")
+                .Select(row => row.Elements(ns + "c")
+                    .ToDictionary(
+                        cell => ObtenerIndiceColumna(cell.Attribute("r")?.Value ?? ""),
+                        cell => ObtenerValorCelda(cell, sharedStrings, ns)))
+                .Where(row => row.Values.Any(value => !string.IsNullOrWhiteSpace(value)))
+                .ToList();
+
+            if (!rows.Any())
+            {
+                return new ResultadoCargaExcel();
+            }
+
+            var headers = rows.First()
+                .ToDictionary(item => item.Key, item => NormalizarEncabezado(item.Value));
+
+            var columnas = new
+            {
+                Codigo = BuscarColumna(headers, "codigo", "codigoproducto", "sku"),
+                Nombre = BuscarColumna(headers, "nombre", "producto"),
+                Descripcion = BuscarColumna(headers, "descripcion", "detalle"),
+                PrecioIngreso = BuscarColumna(headers, "precioingreso", "preciocompra", "compra", "costo", "preciocosto"),
+                PrecioVenta = BuscarColumna(headers, "precioventa", "venta"),
+                Cantidad = BuscarColumna(headers, "cantidad", "stock", "unidades")
+            };
+
+            var resultado = new ResultadoCargaExcel();
+            var columnasRequeridas = new Dictionary<string, int?>
+            {
+                ["Codigo"] = columnas.Codigo,
+                ["Nombre"] = columnas.Nombre,
+                ["PrecioIngreso"] = columnas.PrecioIngreso,
+                ["PrecioVenta"] = columnas.PrecioVenta,
+                ["Cantidad"] = columnas.Cantidad
+            };
+
+            var faltantes = columnasRequeridas
+                .Where(columna => columna.Value == null)
+                .Select(columna => columna.Key)
+                .ToList();
+
+            if (faltantes.Any())
+            {
+                resultado.Errores.Add("Faltan columnas requeridas: " + string.Join(", ", faltantes));
+                return resultado;
+            }
+
+            var codigosEnArchivo = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                var numeroFila = i + 1;
+                var codigo = ObtenerValor(row, columnas.Codigo).Trim();
+                var nombre = ObtenerValor(row, columnas.Nombre).Trim();
+                var descripcion = ObtenerValor(row, columnas.Descripcion).Trim();
+
+                if (string.IsNullOrWhiteSpace(codigo) && string.IsNullOrWhiteSpace(nombre))
+                {
+                    continue;
+                }
+
+                var erroresFila = new List<string>();
+                if (string.IsNullOrWhiteSpace(codigo)) erroresFila.Add("codigo vacío");
+                if (string.IsNullOrWhiteSpace(nombre)) erroresFila.Add("nombre vacío");
+                if (!LeerDecimal(ObtenerValor(row, columnas.PrecioIngreso), out var precioIngreso) || precioIngreso <= 0) erroresFila.Add("precio de compra inválido");
+                if (!LeerDecimal(ObtenerValor(row, columnas.PrecioVenta), out var precioVenta) || precioVenta <= 0) erroresFila.Add("precio de venta inválido");
+                if (!LeerEntero(ObtenerValor(row, columnas.Cantidad), out var cantidad) || cantidad <= 0) erroresFila.Add("cantidad inválida");
+                if (precioIngreso >= precioVenta) erroresFila.Add("precio de compra debe ser menor al precio de venta");
+                if (!codigosEnArchivo.Add(codigo)) erroresFila.Add("codigo duplicado en el archivo");
+
+                if (erroresFila.Any())
+                {
+                    resultado.Errores.Add($"Fila {numeroFila}: {string.Join(", ", erroresFila)}.");
+                    continue;
+                }
+
+                resultado.Productos.Add(new IngresoProducto
+                {
+                    Codigo = codigo,
+                    Nombre = nombre,
+                    Descripcion = descripcion,
+                    PrecioIngreso = precioIngreso,
+                    PrecioVenta = precioVenta,
+                    Cantidad = cantidad
+                });
+            }
+
+            return resultado;
+        }
+
+        private static List<string> LeerSharedStrings(ZipArchive archive)
+        {
+            var entry = archive.GetEntry("xl/sharedStrings.xml");
+            if (entry == null) return new List<string>();
+
+            using var stream = entry.Open();
+            var document = XDocument.Load(stream);
+            XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            return document.Descendants(ns + "si")
+                .Select(item => string.Concat(item.Descendants(ns + "t").Select(text => text.Value)))
+                .ToList();
+        }
+
+        private static string ObtenerValorCelda(XElement cell, List<string> sharedStrings, XNamespace ns)
+        {
+            var type = cell.Attribute("t")?.Value;
+            if (type == "inlineStr")
+            {
+                return string.Concat(cell.Descendants(ns + "t").Select(text => text.Value));
+            }
+
+            var value = cell.Element(ns + "v")?.Value ?? "";
+            if (type == "s" && int.TryParse(value, out var sharedStringIndex) && sharedStringIndex >= 0 && sharedStringIndex < sharedStrings.Count)
+            {
+                return sharedStrings[sharedStringIndex];
+            }
+
+            return value;
+        }
+
+        private static int ObtenerIndiceColumna(string referencia)
+        {
+            var indice = 0;
+            foreach (var caracter in referencia.TakeWhile(char.IsLetter))
+            {
+                indice = (indice * 26) + (char.ToUpperInvariant(caracter) - 'A' + 1);
+            }
+            return indice;
+        }
+
+        private static string NormalizarEncabezado(string value)
+        {
+            var normalized = value.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder();
+            foreach (var character in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(character);
+                if (category != UnicodeCategory.NonSpacingMark && char.IsLetterOrDigit(character))
+                {
+                    builder.Append(character);
+                }
+            }
+            return builder.ToString();
+        }
+
+        private static int? BuscarColumna(Dictionary<int, string> headers, params string[] nombres)
+        {
+            return headers.FirstOrDefault(header => nombres.Contains(header.Value)).Key is var key && key > 0 ? key : null;
+        }
+
+        private static string ObtenerValor(Dictionary<int, string> row, int? columna)
+        {
+            return columna.HasValue && row.TryGetValue(columna.Value, out var value) ? value : "";
+        }
+
+        private static bool LeerDecimal(string value, out decimal result)
+        {
+            value = value.Replace("Q", "", StringComparison.OrdinalIgnoreCase).Trim();
+            return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result)
+                || decimal.TryParse(value, NumberStyles.Number, new CultureInfo("es-GT"), out result);
+        }
+
+        private static bool LeerEntero(string value, out int result)
+        {
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            {
+                return true;
+            }
+
+            if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalValue))
+            {
+                result = (int)decimalValue;
+                return decimalValue == result;
+            }
+
+            return false;
+        }
+
         private async Task<int> ObtenerUsuarioValido()
         {
             try
@@ -655,5 +927,11 @@ namespace ControlInventario.Controllers
         public decimal PrecioIngreso { get; set; }
         public decimal PrecioVenta { get; set; }
         public int Cantidad { get; set; }
+    }
+
+    public class ResultadoCargaExcel
+    {
+        public List<IngresoProducto> Productos { get; set; } = new();
+        public List<string> Errores { get; set; } = new();
     }
 }

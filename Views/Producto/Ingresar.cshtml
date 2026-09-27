@@ -333,6 +333,22 @@
                         <!-- Los resultados se cargarán aquí -->
                     </div>
 
+                    <!-- Bulk Excel Upload -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="font-weight-bold text-primary">Carga masiva con Excel</h6>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Archivo .xlsx</label>
+                            <input type="file" id="archivoExcelProductos" class="form-control" accept=".xlsx">
+                            <small class="text-muted d-block mt-2">
+                                Columnas: Codigo, Nombre, Descripcion, PrecioIngreso, PrecioVenta, Cantidad.
+                            </small>
+                        </div>
+                        <button class="btn btn-info btn-block" type="button" onclick="cargarExcelProductos()">
+                            <i class="fas fa-file-excel"></i> Cargar Excel
+                        </button>
+                        <div id="resultadoCargaExcel" class="mt-3"></div>
+                    </div>
+
                     <!-- Create New Product -->
                     <div class="mt-3">
                         <button class="btn btn-success btn-block" onclick="mostrarFormularioNuevo()">
@@ -629,6 +645,79 @@
             });
         }
 
+        async function cargarExcelProductos() {
+            const input = document.getElementById('archivoExcelProductos');
+            const resultado = document.getElementById('resultadoCargaExcel');
+            const archivo = input.files && input.files.length > 0 ? input.files[0] : null;
+
+            if (!archivo) {
+                resultado.innerHTML = '<div class="alert alert-warning">Seleccione un archivo Excel .xlsx.</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('archivo', archivo);
+
+            resultado.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> Leyendo archivo...
+                </div>
+            `;
+
+            try {
+                const response = await fetch('@Url.Action("CargarExcelProductos", "Producto")', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    const errores = Array.isArray(data.errores) && data.errores.length > 0
+                        ? `<ul class="mb-0 mt-2">${data.errores.map(error => `<li>${error}</li>`).join('')}</ul>`
+                        : '';
+                    resultado.innerHTML = `<div class="alert alert-danger">${data.message || 'No se pudo cargar el archivo.'}${errores}</div>`;
+                    return;
+                }
+
+                let agregados = 0;
+                let omitidos = 0;
+                data.productos.forEach(producto => {
+                    const agregado = agregarProductoALista({
+                        idProducto: producto.idProducto,
+                        codigo: producto.codigo,
+                        nombre: producto.nombre,
+                        descripcion: producto.descripcion,
+                        precioIngreso: producto.precioIngreso,
+                        precioVenta: producto.precioVenta,
+                        cantidad: producto.cantidad,
+                        stockActual: producto.stockActual
+                    }, true);
+
+                    if (agregado) {
+                        agregados++;
+                    } else {
+                        omitidos++;
+                    }
+                });
+
+                const errores = Array.isArray(data.errores) && data.errores.length > 0
+                    ? `<details class="mt-2"><summary>Filas omitidas (${data.errores.length})</summary><ul class="mb-0 mt-2">${data.errores.map(error => `<li>${error}</li>`).join('')}</ul></details>`
+                    : '';
+
+                resultado.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>${agregados}</strong> productos agregados a la lista.
+                        ${omitidos > 0 ? `<br><strong>${omitidos}</strong> ya estaban en la lista y se omitieron.` : ''}
+                        ${errores}
+                    </div>
+                `;
+                input.value = '';
+            } catch (error) {
+                console.error('Error al cargar Excel:', error);
+                resultado.innerHTML = '<div class="alert alert-danger">Error al cargar el archivo Excel.</div>';
+            }
+        }
+
         // Mostrar formulario de nuevo producto
         function mostrarFormularioNuevo() {
             document.getElementById('formularioNuevo').style.display = 'block';
@@ -723,7 +812,7 @@
         }
 
         // Agregar producto a la lista
-        function agregarProductoALista(producto) {
+        function agregarProductoALista(producto, silencioso = false) {
             // Verificar si ya está en la lista
             const existente = productosParaIngresar.find(p => 
                 (p.idProducto > 0 && p.idProducto === producto.idProducto) || 
@@ -731,13 +820,16 @@
             );
             
             if (existente) {
-                alert('Este producto ya está en la lista. Puede modificar la cantidad directamente en la tabla.');
-                return;
+                if (!silencioso) {
+                    alert('Este producto ya está en la lista. Puede modificar la cantidad directamente en la tabla.');
+                }
+                return false;
             }
 
             producto.index = productoIndex++;
             productosParaIngresar.push(producto);
             actualizarLista();
+            return true;
         }
 
         // Actualizar lista visual
